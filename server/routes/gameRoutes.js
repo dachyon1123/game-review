@@ -94,7 +94,7 @@ router.post('/oauth2/token/game/:id', async (req, res) => {
 					'Client-ID': process.env.client_id,
 					Authorization: `Bearer ${token}`,
 				},
-				body: `fields name,cover.image_id,involved_companies.company.name,first_release_date,genres.name,summary,updated_at,storyline; where id = ${gameId};`,
+				body: `fields name,cover.image_id,involved_companies.company.name,first_release_date,genres.name,summary,updated_at,storyline,rating,rating_count,screenshots; where id = ${gameId};`,
 			});
 
 			if (!igdbResponse) {
