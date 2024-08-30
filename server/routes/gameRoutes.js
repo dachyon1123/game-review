@@ -22,36 +22,35 @@ async function getToken() {
 	return auth.access_token;
 }
 
-// router.post('/oauth2/token', async (req, res) => {
+router.post('/oauth2/token', async (req, res) => {
+	const request = req.body;
 
-//     const request = req.body
+	try {
+		const token = await getToken();
 
-// 	try {
-// 		const token = await getToken();
+		if (token) {
+			const igdbResponse = await fetch('https://api.igdb.com/v4/games', {
+				method: 'POST',
+				headers: {
+					'Client-ID': process.env.client_id,
+					Authorization: `Bearer ${token}`,
+				},
+				body: `fields name,cover.image_id,first_release_date; where first_release_date != null & first_release_date < 1724516090; sort first_release_date desc; limit 20;`
+			});
 
-// 		if (token) {
-// 			const igdbResponse = await fetch('https://api.igdb.com/v4/games', {
-// 				method: 'POST',
-// 				headers: {
-// 					'Client-ID': process.env.client_id,
-// 					Authorization: `Bearer ${token}`,
-// 				},
-// 				body: `fields name,cover.image_id,cover.url; limit 500; where name = "${request.searchString}"* & cover.url != null;`,
-// 			});
+			if (!igdbResponse.ok) {
+				throw new Error(`IGDB Response status: ${igdbResponse.status}`);
+			}
 
-// 			if (!igdbResponse.ok) {
-// 				throw new Error(`IGDB Response status: ${igdbResponse.status}`);
-// 			}
-
-// 			const games = await igdbResponse.json();
-// 			res.json(games);
-// 		} else {
-// 			res.status(500).json({ error: 'Failed to obtain token' });
-// 		}
-// 	} catch (error) {
-// 		console.log(error);
-// 	}
-// });
+			const games = await igdbResponse.json();
+			res.json(games);
+		} else {
+			res.status(500).json({ error: 'Failed to obtain token' });
+		}
+	} catch (error) {
+		console.log(error);
+	}
+});
 
 router.post('/oauth2/token/game-search', async (req, res) => {
 	const request = req.body;
@@ -94,7 +93,7 @@ router.post('/oauth2/token/game/:id', async (req, res) => {
 					'Client-ID': process.env.client_id,
 					Authorization: `Bearer ${token}`,
 				},
-				body: `fields name,cover.image_id,involved_companies.company.name,first_release_date,genres.name,summary,updated_at,storyline,rating,rating_count,screenshots; where id = ${gameId};`,
+				body: `fields name,similar_games,cover.image_id,involved_companies.company.name,first_release_date,genres.name,summary,updated_at,storyline,rating,rating_count,screenshots.image_id; where id = ${gameId};`,
 			});
 
 			if (!igdbResponse) {
@@ -111,5 +110,31 @@ router.post('/oauth2/token/game/:id', async (req, res) => {
 	}
 });
 
+router.post('/oauth2/token/game/', async (req, res) => {
+	try {
+		const token = await getToken();
+		const gameIds = req.body;
+
+		if (token) {
+			const igdbResponse = await fetch('https://api.igdb.com/v4/games', {
+				method: 'POST',
+				headers: {
+					'Client-ID': process.env.client_id,
+					Authorization: `Bearer ${token}`,
+				},
+				body: `fields name,cover.image_id; where id = (${gameIds.join(',')});`,
+			});
+
+			if (!igdbResponse) {
+				throw new Error(`IGDB Response Status: ${igdbResponse.status}`);
+			}
+
+			const games = await igdbResponse.json();
+			res.json(games);
+		}
+	} catch (error) {
+		console.error(error);
+	}
+});
 
 module.exports = router;

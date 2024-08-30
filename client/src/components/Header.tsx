@@ -65,7 +65,9 @@ export default function Header() {
 
     return (
         <header className="flex flex-col justify-center items-center py-4 bg-black">
-            <h1 className="text-white text-3xl flex">Your Games</h1>
+            <Link to="/">
+                <h1 className="text-white text-3xl flex">Your Games</h1>
+            </Link>
             <div className="relative pt-10 w-1/3 text-white" ref={wrapperRef}>
                 <input type="search" name="search" id="search" value={search} onChange={handleSearch} className={`bg-gray-800 border-black p-2 rounded-${searchStyle} focus:outline-none w-full h-[40px]`} />
                 <ul className="absolute bg-gray-800 w-full">
